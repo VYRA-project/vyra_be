@@ -16,7 +16,7 @@ export class AuthService {
     });
 
     if (userExists) {
-      throw new BadRequestException('Acest email este deja înregistrat!');
+      throw new BadRequestException('Email already in use!');
     }
 
    
@@ -35,7 +35,7 @@ export class AuthService {
 
 
     return {
-      message: 'Utilizator creat cu succes!',
+      message: 'User created successfully',
       user: { email: newUser.email, fullName: newUser.fullName },
     };
   }
@@ -47,21 +47,21 @@ export class AuthService {
 
 
     if (!user) {
-      throw new BadRequestException('Invalid email or password');
+      throw new BadRequestException('Invalid email or password!');
     }
 
 
     const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordMatches) {
-      throw new BadRequestException('Invalid email or password');
+      throw new BadRequestException('Invalid email or password!');
     }
 
   
     const payload = { sub: user.id, email: user.email, role: user.role };
     const token = await this.jwtService.signAsync(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '1d',
+      expiresIn: '7d',
     });
 
 
