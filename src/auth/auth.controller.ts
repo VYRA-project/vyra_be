@@ -11,8 +11,19 @@ export class AuthController {
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
-  @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+ @Post('login')
+  async login(@Body() dto: LoginDto) {
+   console.log('--- LOGIN REQUEST RECEIVED ---');
+  console.log('Data received from Unity:', dto);
+    
+    try {
+      const result = await this.authService.login(dto);
+      console.log('Login successful for:', dto.email);
+      return result;
+    } catch (error) {
+ console.error('LOGIN ERROR:', error.message);
+      throw error; 
+    }
   }
+
 }
