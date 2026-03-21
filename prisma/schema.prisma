@@ -8,11 +8,115 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// --- UTILIZATORI (Tabelul tău existent) ---
 model User {
-  id           Int      @id @default(autoincrement())
-  fullName     String   @map("full_name")
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         String   @default("user")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id           Int       @id @default(autoincrement())
+  fullName     String    @map("full_name")
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String    @default("user") // admin, user
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  // Relații virtuale (Nu apar ca coloane în DB, deci nu pierzi datele)
+  projects     Project[]
+  scenarios    Scenario[]
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+// --- PROIECTE ---
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdBy   Int       @map("created_by")
+  user        User      @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  scenarios    Scenario[]
+  activityLogs ActivityLog[]
+
+  @@map("projects")
+}
+
+// --- CLADIRI (CAMPUS ELEMENTS) ---
+model CampusElement {
+  id              Int      @id @default(autoincrement())
+  name            String   // Student Housing, Corp D, Biblioteca
+  type            String?  // RESIDENTIAL, ACADEMIC
+  unityTag        String?  @map("unity_tag") // Tag-ul pentru Unity
+  baseTemperature Float?   @map("base_temperature")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  environmentalData EnvironmentalData[]
+  activityLogs      ActivityLog[]
+
+  @@map("campus_elements")
+}
+
+// --- DATE SENZORI (PROVENITE DIN ESP32) ---
+model EnvironmentalData {
+  id         Int           @id @default(autoincrement())
+  elementId  Int           @map("element_id")
+  element    CampusElement @relation(fields: [elementId], references: [id])
+  
+  dataType   String        @map("data_type") // TEMPERATURE, HUMIDITY, CO2, TRAFFIC
+  value      Float         // Valoarea primita de la senzori
+  unit       String        // Celsius, %, ppm, count
+  measuredAt DateTime      @default(now()) @map("measured_at")
+
+  @@index([elementId, dataType, measuredAt]) // Index pentru performanță
+  @@map("environmental_data")
+}
+
+// --- SIMULARI (WHAT-IF) ---
+model Scenario {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  project       Project  @relation(fields: [projectId], references: [id])
+  name          String   // ex: 'Economy Mode 18C'
+  simulatedTemp Float    @map("simulated_temp") // Slider-ul din Unity
+  createdBy     Int      @map("created_by")
+  user          User     @relation(fields: [createdBy], references: [id])
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminFeedback String?  @map("admin_feedback")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  impacts ScenarioImpact[]
+
+  @@map("scenarios")
+}
+
+// --- ANALYTICS (REZULTAT SIMULARE) ---
+model ScenarioImpact {
+  id          Int      @id @default(autoincrement())
+  scenarioId  Int      @map("scenario_id")
+  scenario    Scenario @relation(fields: [scenarioId], references: [id])
+  
+  impactType  String   @map("impact_type") // MOLD_RISK, ENERGY_SAVING
+  dewPoint    Float    @map("dew_point")   // Calculat in NestJS
+  riskLevel   String   @map("risk_level")  // LOW, MODERATE, CRITICAL
+  description String?  
+  calculatedAt DateTime @default(now()) @map("calculated_at")
+
+  @@map("scenario_impacts")
+}
+
+// --- ALERTE SI LOGURI ---
+model ActivityLog {
+  id        Int            @id @default(autoincrement())
+  userId    Int?           @map("user_id")
+  user      User?          @relation(fields: [userId], references: [id])
+  projectId Int?           @map("project_id")
+  project   Project?       @relation(fields: [projectId], references: [id])
+  elementId Int?           @map("element_id")
+  element   CampusElement? @relation(fields: [elementId], references: [id])
+  
+  action    String         // ANOMALY_DETECTED, SCENARIO_SUBMITTED
+  severity  String         // INFO, WARNING, CRITICAL
+  message   String         // Mesaj Card ALERTS
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@map("activity_log")
 }
