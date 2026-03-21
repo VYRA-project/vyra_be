@@ -1,7 +1,7 @@
 // src/environmental-data/environmental-data.controller.ts
 import { Controller, Post, Body, UsePipes, ValidationPipe } from '@nestjs/common';
 import { EnvironmentalDataService } from './environmental-data.service';
-import { CreateEnvironmentalRecordDto } from './create-environmental-record.dto';
+import { CreateEnvironmentalRecordDto } from './dto/create-environmental-record.dto';
 
 
 @Controller('environmental-data')
