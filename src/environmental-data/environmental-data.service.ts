@@ -48,8 +48,8 @@ async ingestData(dto: CreateEnvironmentalRecordDto) {
 
       this.logger.log(`Inserted ${result.count} records for element ${elementId}`);
       return { count: result.count, status: 'Created' };
-    } catch (error) {
-      this.logger.error(`Error: ${error.message}`);
+    } catch (error: any) { // MODIFICARE: Adaugă ": any" aici
+      this.logger.error(`Error: ${error.message}`); // Acum nu mai dă eroare la .message
       throw new InternalServerErrorException('Database failed');
     }
   }

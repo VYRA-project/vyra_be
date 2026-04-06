@@ -8,7 +8,7 @@ import { Logger } from '@nestjs/common';
   pingInterval: 25000,
 })
 export class EnvironmentalDataGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server!: Server;
   
   private readonly logger = new Logger(EnvironmentalDataGateway.name);
 

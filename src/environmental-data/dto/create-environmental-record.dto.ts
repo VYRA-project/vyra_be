@@ -3,7 +3,7 @@ import { IsNumber, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateEnvironmentalRecordDto {
   @IsInt()
   @IsNotEmpty()
-  elementId: number;
+  elementId !: number;
 
   @IsOptional() 
   @IsNumber()
