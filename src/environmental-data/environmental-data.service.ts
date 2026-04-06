@@ -167,5 +167,40 @@ private async sendSmartAlert(elementId: number, action: string, severity: string
     }
   });
 }
+async getWeeklyComparisonReport() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+ 
+  const [todayAverages, weeklyAverages] = await Promise.all([
+    this.prisma.environmentalData.groupBy({
+      by: ['dataType'],
+      where: { measuredAt: { gte: startOfToday } },
+      _avg: { value: true },
+    }),
+    this.prisma.environmentalData.groupBy({
+      by: ['dataType'],
+      where: { measuredAt: { gte: sevenDaysAgo } },
+      _avg: { value: true },
+    }),
+  ]);
+
+  
+  return todayAverages.map((today) => {
+    const weekly = weeklyAverages.find((w) => w.dataType === today.dataType);
+    const tAvg = today._avg.value || 0;
+    const wAvg = weekly?._avg.value || 0;
+
+    return {
+      dataType: today.dataType,
+      todayAverage: parseFloat(tAvg.toFixed(2)),
+      weeklyAverage: parseFloat(wAvg.toFixed(2)),
+    
+      deviationPercentage: wAvg !== 0 ? parseFloat(((tAvg - wAvg) / wAvg * 100).toFixed(1)) : 0,
+      status: tAvg > wAvg ? 'ABOVE_AVERAGE' : 'BELOW_AVERAGE',
+    };
+  });
+}
 
 }
