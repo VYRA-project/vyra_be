@@ -8,7 +8,7 @@ import { EnvironmentalDataModule } from './environmental-data/environmental-data
 
 
 @Module({
-  imports: [AuthModule, PrismaModule,EnvironmentalDataModule],
+  imports: [AuthModule, PrismaModule,EnvironmentalDataModule,],
   controllers: [AppController],
   providers: [AppService],
  

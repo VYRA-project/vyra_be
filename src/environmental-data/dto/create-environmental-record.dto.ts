@@ -5,7 +5,7 @@ export class CreateEnvironmentalRecordDto {
   @IsNotEmpty()
   elementId: number;
 
-  @IsOptional() // Adaugă asta la toate în afară de elementId
+  @IsOptional() 
   @IsNumber()
   temperature?: number;
 
