@@ -3,9 +3,9 @@ import { IsNumber, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateEnvironmentalRecordDto {
   @IsInt()
   @IsNotEmpty()
-  elementId: number;
+  elementId !: number;
 
-  @IsOptional() // Adaugă asta la toate în afară de elementId
+  @IsOptional() 
   @IsNumber()
   temperature?: number;
 
