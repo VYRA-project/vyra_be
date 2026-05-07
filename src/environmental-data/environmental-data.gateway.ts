@@ -2,7 +2,7 @@ import { WebSocketGateway, WebSocketServer, OnGatewayInit, OnGatewayConnection, 
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 
-@WebSocketGateway(3001, {
+@WebSocketGateway({
   cors: { origin: '*' },
   pingTimeout: 60000, 
   pingInterval: 25000,
@@ -12,9 +12,16 @@ export class EnvironmentalDataGateway implements OnGatewayInit, OnGatewayConnect
   
   private readonly logger = new Logger(EnvironmentalDataGateway.name);
 
- 
- afterInit(server: Server) {
-  console.log('!!!!!!!!!!!!!!!! WEBSOCKET IS ALIVE ON PORT 3001 !!!!!!!!!!!!!!!!');
+afterInit(server: any) {
+  // Verificăm dacă serverul are o adresă (funcționează pe servere HTTP/Express)
+  const httpServer = server.httpServer || (server.engine && server.engine.handleUpgrade ? server.engine : null);
+  
+  // Cea mai sigură metodă în NestJS pentru a lua portul:
+  const address = server.address ? server.address() : server.parentServer?.address();
+  
+  const port = typeof address === 'string' ? address : address?.port;
+
+  this.logger.log(`\n!!!!!!!!!!!!!!!! WEBSOCKET IS ALIVE ON PORT ${port || 'unknown'} !!!!!!!!!!!!!!!!\n`);
 }
 
  
