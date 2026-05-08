@@ -1,5 +1,5 @@
 // src/environmental-data/environmental-data.controller.ts
-import { Controller, Post, Body, UsePipes, ValidationPipe, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UsePipes, ValidationPipe, Get, UseGuards, Param, ParseIntPipe } from '@nestjs/common';
 import { EnvironmentalDataService } from './environmental-data.service';
 import { CreateEnvironmentalRecordDto } from './dto/create-environmental-record.dto';
 import { EnvironmentalDataGateway } from './environmental-data.gateway';
@@ -31,5 +31,10 @@ async getAlerts() {
 @Get('reports/weekly-comparison')
 async getWeeklyReport() {
   return await this.environmentalDataService.getWeeklyComparisonReport();
+}
+@UseGuards(JwtAuthGuard)
+@Get('building/:id/analytics')
+async getBuildingAnalytics(@Param('id', ParseIntPipe) id: number) {
+  return await this.environmentalDataService.getBuildingAnalytics(id);
 }
 }

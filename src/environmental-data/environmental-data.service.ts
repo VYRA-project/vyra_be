@@ -202,5 +202,39 @@ async getWeeklyComparisonReport() {
     };
   });
 }
+async getBuildingAnalytics(elementId: number) {
+  const startTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  // Interogare brută pentru performanță maximă și grupare pe oră
+  const stats: any[] = await this.prisma.$queryRaw`
+    SELECT 
+      DATE_TRUNC('hour', "measured_at") AS "time",
+      "data_type" AS "type",
+      ROUND(AVG("value")::numeric, 2) AS "val"
+    FROM "environmental_data"
+    WHERE "element_id" = ${elementId} 
+      AND "measured_at" >= ${startTime}
+    GROUP BY "time", "type"
+    ORDER BY "time" ASC;
+  `;
+
+  // Transformăm datele din rânduri în obiecte grupate pe oră (JSON-ul final)
+  const formattedData = stats.reduce((acc, item) => {
+    const timeKey = item.time.toISOString();
+    if (!acc[timeKey]) {
+    const hourNum = new Date(timeKey).getHours();
+    acc[timeKey] = { 
+      timestamp: timeKey, 
+      hour: hourNum,
+      displayTime: `${hourNum.toString().padStart(2, '0')}:00` // ADAUGĂ ASTA
+    };
+    }
+    // Adăugăm dinamic tipul de date (TEMPERATURE, HUMIDITY, CO2, TRAFFIC)
+    acc[timeKey][item.type] = item.val;
+    return acc;
+  }, {});
+
+  return Object.values(formattedData);
+}
 
 }
