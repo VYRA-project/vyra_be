@@ -34,7 +34,6 @@ model Project {
   user        User      @relation(fields: [createdBy], references: [id])
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  scenarios    Scenario[]
   activityLogs ActivityLog[]
 
   @@map("projects")
@@ -51,6 +50,7 @@ model CampusElement {
 
   environmentalData EnvironmentalData[]
   activityLogs      ActivityLog[]
+  scenarios Scenario[]
 
   @@map("campus_elements")
 }
@@ -73,21 +73,24 @@ model EnvironmentalData {
 // --- SIMULARI (WHAT-IF) ---
 model Scenario {
   id            Int      @id @default(autoincrement())
-  projectId     Int      @map("project_id")
-  project       Project  @relation(fields: [projectId], references: [id])
-  name          String   // ex: 'Economy Mode 18C'
-  simulatedTemp Float    @map("simulated_temp") // Slider-ul din Unity
+
+  elementId     Int      @map("element_id")
+  element       CampusElement @relation(fields: [elementId], references: [id])
+
+  name          String
+  simulatedTemp Float    @map("simulated_temp")
+
   createdBy     Int      @map("created_by")
   user          User     @relation(fields: [createdBy], references: [id])
-  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+
+  status        String   @default("PENDING")
   adminFeedback String?  @map("admin_feedback")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  impacts ScenarioImpact[]
+  impacts       ScenarioImpact[]
 
   @@map("scenarios")
 }
-
 // --- ANALYTICS (REZULTAT SIMULARE) ---
 model ScenarioImpact {
   id          Int      @id @default(autoincrement())

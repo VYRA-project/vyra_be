@@ -218,7 +218,7 @@ async getBuildingAnalytics(elementId: number) {
     ORDER BY "time" ASC;
   `;
 
-  // Transformăm datele din rânduri în obiecte grupate pe oră (JSON-ul final)
+ 
   const formattedData = stats.reduce((acc, item) => {
     const timeKey = item.time.toISOString();
     if (!acc[timeKey]) {
@@ -236,5 +236,79 @@ async getBuildingAnalytics(elementId: number) {
 
   return Object.values(formattedData);
 }
+
+async getBuildingsOperationalSnapshot() {
+  const latestData = await this.prisma.environmentalData.findMany({
+    distinct: ['elementId', 'dataType'],
+    orderBy: [
+      { elementId: 'asc' },
+      { dataType: 'asc' },
+      { measuredAt: 'desc' },
+    ],
+    include: {
+      element: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
+  const alerts = await this.prisma.activityLog.groupBy({
+    by: ['elementId'],
+    where: {
+      severity: { in: ['WARNING', 'CRITICAL'] },
+      createdAt: {
+        gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      },
+    },
+    _count: true,
+  });
+
+  const alertsMap = new Map(
+    alerts.map((a) => [a.elementId, a._count])
+  );
+
+  const buildings = new Map<number, any>();
+
+  latestData.forEach((d) => {
+    if (!buildings.has(d.elementId)) {
+      buildings.set(d.elementId, {
+        buildingId: d.elementId,
+        buildingName: d.element?.name ?? `Building ${d.elementId}`,
+        current: {
+          temperature: null,
+          humidity: null,
+          co2: null,
+          traffic: null,
+        },
+        status: 'NORMAL',
+        alertsCount: alertsMap.get(d.elementId) ?? 0,
+        lastMeasuredAt: d.measuredAt,
+      });
+    }
+
+    const building = buildings.get(d.elementId);
+
+    if (d.dataType === 'TEMPERATURE') building.current.temperature = d.value;
+    if (d.dataType === 'HUMIDITY') building.current.humidity = d.value;
+    if (d.dataType === 'AIR_QUALITY') building.current.co2 = d.value;
+    if (d.dataType === 'TRAFFIC') building.current.traffic = d.value;
+
+    if (d.measuredAt > building.lastMeasuredAt) {
+      building.lastMeasuredAt = d.measuredAt;
+    }
+  });
+
+  return Array.from(buildings.values()).map((b) => {
+    const { temperature, humidity, co2 } = b.current;
+
+    if (co2 !== null && co2 > 1200) b.status = 'CRITICAL';
+    else if (humidity !== null && humidity > 75 && temperature !== null && temperature < 18) b.status = 'CRITICAL';
+    else if (co2 !== null && co2 > 900) b.status = 'WARNING';
+    else b.status = 'NORMAL';
+
+    return b;
+  });
+}
+
 
 }

@@ -37,4 +37,11 @@ async getWeeklyReport() {
 async getBuildingAnalytics(@Param('id', ParseIntPipe) id: number) {
   return await this.environmentalDataService.getBuildingAnalytics(id);
 }
+@UseGuards(JwtAuthGuard)
+@Get('buildings/operational-snapshot')
+async getBuildingsOperationalSnapshot() {
+  return this.environmentalDataService.getBuildingsOperationalSnapshot();
+}
+
+
 }
