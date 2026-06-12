@@ -219,20 +219,26 @@ async getBuildingAnalytics(elementId: number) {
   `;
 
  
-  const formattedData = stats.reduce((acc, item) => {
-    const timeKey = item.time.toISOString();
-    if (!acc[timeKey]) {
-    const hourNum = new Date(timeKey).getHours();
-    acc[timeKey] = { 
-      timestamp: timeKey, 
-      hour: hourNum,
-      displayTime: `${hourNum.toString().padStart(2, '0')}:00` // ADAUGĂ ASTA
+const formattedData = stats.reduce((acc, item) => {
+  const date = new Date(item.time);
+  const timeKey = date.toISOString();
+
+  if (!acc[timeKey]) {
+    const displayTime = date.toLocaleTimeString('ro-RO', {
+      timeZone: 'Europe/Bucharest',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    acc[timeKey] = {
+      timestamp: timeKey,
+      displayTime,
     };
-    }
-    // Adăugăm dinamic tipul de date (TEMPERATURE, HUMIDITY, CO2, TRAFFIC)
-    acc[timeKey][item.type] = item.val;
-    return acc;
-  }, {});
+  }
+
+  acc[timeKey][item.type] = item.val;
+  return acc;
+}, {});
 
   return Object.values(formattedData);
 }
