@@ -12,6 +12,14 @@ export class EnvironmentalDataController {
     private readonly gateway: EnvironmentalDataGateway
   ) {}
 
+  @Get('health')
+health() {
+  return {
+    status: 'ok',
+    timestamp: new Date(),
+  };
+}
+
   @Post('upload')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async upload(@Body() dto: CreateEnvironmentalRecordDto) {
