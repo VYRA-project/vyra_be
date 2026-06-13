@@ -12,7 +12,7 @@ export class EnvironmentalDataService {
   ) {}
 
 async ingestData(dto: CreateEnvironmentalRecordDto) {
-  this.gateway.broadcastAlert({ test: "Bingo" });
+
     const { elementId, ...measurements } = dto;
 
    
@@ -107,11 +107,38 @@ if (co2 !== undefined && co2 !== null) {
 }
 
 
-private async sendSmartAlert(elementId: number, action: string, severity: string, message: string) {
+private async sendSmartAlert(
+  elementId: number,
+  action: string,
+  severity: string,
+  message: string,
+) {
   const alert = await this.prisma.activityLog.create({
-    data: { elementId, action, severity, message }
+    data: {
+      elementId,
+      action,
+      severity,
+      message,
+    },
+    include: {
+      element: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   });
-  this.gateway.broadcastAlert(alert);
+
+  this.gateway.broadcastAlert({
+    id: alert.id,
+    buildingId: alert.elementId,
+    buildingName: alert.element?.name,
+    action: alert.action,
+    severity: alert.severity,
+    message: alert.message,
+    createdAt: alert.createdAt,
+  });
 }
  async getCampusDashboard() {
 
