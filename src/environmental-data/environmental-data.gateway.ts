@@ -36,10 +36,8 @@ afterInit(server: any) {
 
 
 broadcastAlert(data: any) {
- 
-  this.logger.log(`\n📢 [WebSocket Broadcast]\n${JSON.stringify(data, null, 2)}\n`);
   
-  this.server.emit('message', data);
-  this.server.emit('new_alert', data);
+
+  this.server.emit('alert:new', data);
 }
 }
