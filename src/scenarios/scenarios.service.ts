@@ -33,11 +33,10 @@ export class ScenariosService {
       );
     }
 
-    const dewPoint = this.calculateDewPoint(
-      currentTemp.value,
-      currentHumidity.value,
-    );
-
+   const dewPoint = this.calculateDewPoint(
+  dto.simulatedTemp,
+  currentHumidity.value,
+);
     const risk = this.calculateRisk(dto.simulatedTemp, dewPoint);
 
     const scenario = await this.prisma.scenario.create({
@@ -134,7 +133,7 @@ export class ScenariosService {
       },
     });
   }
-  async getWhatIfBase(elementId: number) {
+ async getWhatIfBase(elementId: number) {
   const building = await this.prisma.campusElement.findUnique({
     where: { id: elementId },
     select: { id: true, name: true },
@@ -162,12 +161,13 @@ export class ScenariosService {
   }
 
   const defaultSimulatedTemp = 18;
-  const dewPoint = this.calculateDewPoint(
-    defaultSimulatedTemp,
+
+  const currentDewPoint = this.calculateDewPoint(
+    currentTemp.value,
     currentHumidity.value,
   );
 
-  const risk = this.calculateRisk(defaultSimulatedTemp, dewPoint);
+  const risk = this.calculateRisk(currentTemp.value, currentDewPoint);
 
   return {
     elementId: building.id,
@@ -175,7 +175,7 @@ export class ScenariosService {
     currentTemperature: currentTemp.value,
     currentHumidity: currentHumidity.value,
     defaultSimulatedTemp,
-    dewPoint,
+    dewPoint: currentDewPoint,
     riskLevel: risk.riskLevel,
     description: risk.description,
   };
