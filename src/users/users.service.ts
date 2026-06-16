@@ -5,6 +5,14 @@ import { PrismaService } from 'prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  private formatDate(date: Date) {
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const year = date.getUTCFullYear();
+
+    return `${day}.${month}.${year}`;
+  }
+
   async getMyProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -24,7 +32,9 @@ export class UsersService {
       },
     });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     return {
       user: {
@@ -32,21 +42,23 @@ export class UsersService {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        createdAt: user.createdAt,
+        createdAt: this.formatDate(user.createdAt),
       },
+
       stats: {
         total: user.scenarios.length,
         pending: user.scenarios.filter((s) => s.status === 'PENDING').length,
         approved: user.scenarios.filter((s) => s.status === 'APPROVED').length,
         rejected: user.scenarios.filter((s) => s.status === 'REJECTED').length,
       },
+
       scenarios: user.scenarios.map((s) => ({
         id: s.id,
         name: s.name,
         buildingName: s.element.name,
         simulatedTemp: s.simulatedTemp,
         status: s.status,
-        createdAt: s.createdAt,
+        createdAt: this.formatDate(s.createdAt),
         impact: s.impacts[0]
           ? {
               dewPoint: s.impacts[0].dewPoint,
